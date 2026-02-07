@@ -30,7 +30,7 @@ struct item { // creazione di come deve essere fatto ogni nodo
 //1) CREARE NUOVO NODO DELLA LISTA IN CIMA
 
 struct item *new_item(int id_smp , struct item *next){
-// chiediamo memoria per un nodo
+    // chiediamo memoria per un nodo
     struct item *nuovo = malloc(sizeof(struct item));
 
     //controllo obbligatorio della memoria
@@ -38,7 +38,6 @@ struct item *new_item(int id_smp , struct item *next){
         printf("memoria esaurita");
         exit(1); // uscita forzata mi raccomando non usare return perche siamo in una funzione struct
     }
-
     // riempiamo i campi del nodo
     nuovo->id_smp = id_smp;
     nuovo->next = next; // colleghiamo a quello successivo o a null
@@ -55,7 +54,7 @@ struct item *append_to_list(int id_smp , struct item *head){
     }
     //altrimenti dobbiamo scorrere la lista fino alla fine
     struct item *corrente = head; // partiamo dalla testa
-    while(corrente->next == NULL ){
+    while(corrente->next != NULL ){
         corrente = corrente->next; //mi sposto avanti
     }
     //ora "corrente" e' l'ultimo nodo . attacchiamo quello nuovo dopo di lui
@@ -100,13 +99,13 @@ double avg_duration_by_type(struct analysis array[] , int k , enum priority t){
 void clear_list(struct item *head){
     struct item *temp;
     while (head != NULL) {
-        temp = head;
-        head = head -> next;
-        free(temp);
+        temp = head; //salviamo il nodo attuale in una variabile temporanea
+        head = head -> next; //spostiamo la testa al prossima
+        free(temp); //liberiamo il nodo salvato, cosi libera tutto
     } 
 }
 
-
+//--main--
 
 int main(int argc, char *argv[]){
 
@@ -122,14 +121,13 @@ int main(int argc, char *argv[]){
         return 1;
     }
     
-    int refDuration; 
-    int targetPriority;
+    int refDuration , targetPriority;
 
     do{
         printf("inserisci refDuration: ");
         scanf("%d" , &refDuration);
         if(refDuration < 0 || refDuration > 100){
-           printf("Input errato figlio di troia");
+           printf("Input errato");
            return 1;
         }
     }while(refDuration < 0 || refDuration > 100);
@@ -139,7 +137,7 @@ int main(int argc, char *argv[]){
         printf("inserisci targetPriority: ");
         scanf("%d" , &targetPriority);
         if(targetPriority < 0 || targetPriority > 100){
-           printf("Input errato figlio di troia");
+           printf("Input errato");
            return 1;
         }
     }while(targetPriority < 0 || targetPriority > 2);
@@ -149,9 +147,8 @@ int main(int argc, char *argv[]){
         printf("memoria esaurita \n");
         return 1;
     } 
-
-    for(int i = 0 ; i < k ; i++){
-
+    //acquisizione dati campioni
+    for(int i = 0 ; i < k ; i++) {
         int inHours;
         scanf("%d" , &inHours);
 
@@ -175,6 +172,7 @@ int main(int argc, char *argv[]){
             array[i].prio = HIGH;
         }
 
+        // assegnazione zona 
         switch ( i % 4 ){ 
             case 0 :
                 strcpy(array[i].lab_zone, "ZONA_A"); //strcpy metti l'array
@@ -189,16 +187,18 @@ int main(int argc, char *argv[]){
                 strcpy(array[i].lab_zone, "ZONA_D");
                 break;
         }
-    
-// costruzione della lista
+    } 
+// costruzione della lista (filtro)
     struct item *head = NULL ; //inzializzo 
-
     for(int i = 0 ; i < k ; i ++){
         if(array[i].duration > refDuration){ //se duration e' strettamente maggiore di ref
-            head = 
+            head = append_to_list(head ,i);
         }
     }
-    }
+    // MENU OPERATIVO
+    int cmd;
+    scanf("%d",&cmd);
+    
     return 0;
 }
 
