@@ -1,5 +1,5 @@
-//SAMUELE FRANCESE 939848
-//GESTIONE ANALISI DI LABORATORIO
+// SAMUELE FRANCESE 939848
+// GESTIONE ANALISI DI LABORATORIO
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -7,175 +7,169 @@
 
 #define LEN_CODE 20
 
-enum priority {LOW, MEDIUM , HIGH};
+// Definizione enum per le priorità
+enum priority {
+    LOW = 0,
+    MEDIUM = 1,
+    HIGH = 2
+};
 
+// Struttura per un singolo campione
 struct analysis {
-
     enum priority prio;
     int duration;
     char lab_zone[LEN_CODE];
-
 };
 
-struct item { // creazione di come deve essere fatto ogni nodo
-
-    int id_smp;  // il dato
-    struct item *next;  //puntatore al prossimo nodo
-
+// Struttura per un nodo della lista
+struct item {
+    int id_smp;
+    struct item *next;
 };
 
+// ========== FUNZIONI ==========
 
-// FUNZIONI ESTREMAMENTE IMPORTANTI DA SAPERE
-
-//1) CREARE NUOVO NODO DELLA LISTA IN CIMA
-
-struct item *new_item(int id_smp , struct item *next){
-    // chiediamo memoria per un nodo
+// Crea un nuovo nodo della lista
+struct item *new_item(int id_smp, struct item *next) {
     struct item *nuovo = malloc(sizeof(struct item));
-
-    //controllo obbligatorio della memoria
-    if(nuovo == NULL){
-        printf("memoria esaurita");
-        exit(1); // uscita forzata mi raccomando non usare return perche siamo in una funzione struct
+    
+    if (nuovo == NULL) {
+        printf("Memoria esaurita\n");
+        exit(1);
     }
-    // riempiamo i campi del nodo
+    
     nuovo->id_smp = id_smp;
-    nuovo->next = next; // colleghiamo a quello successivo o a null
-
-    return nuovo; // restituiamo l'indirizzo del nuovo nodo
-}   
-
-//2) INSERISCE UN NODO IN FONDO ALLA LISTA E RITORNA LA NUOVA TESTA
-
-struct item *append_to_list(int id_smp , struct item *head){
-    // se la lista e' vuota diventa la testa
-    if(head == NULL ){
-        return new_item(id_smp,NULL);
-    }
-    //altrimenti dobbiamo scorrere la lista fino alla fine
-    struct item *corrente = head; // partiamo dalla testa
-    while(corrente->next != NULL ){
-        corrente = corrente->next; //mi sposto avanti
-    }
-    //ora "corrente" e' l'ultimo nodo . attacchiamo quello nuovo dopo di lui
-    corrente->next = new_item(id_smp, NULL);
-
-    return head; //la testa non cambia mai se la lista non era vuota
-
+    nuovo->next = next;
+    
+    return nuovo;
 }
 
-//3) CONTA QUANTI CAMPIONI HANNO DURATA STRETTAMENTE MAGGIORE DI MIN_VAL
-int count_longer_than(struct analysis array[], int k , int min_val){
+// Inserisce un nodo in fondo alla lista
+struct item *append_to_list(struct item *head, int id_smp) {
+    // Lista vuota: il nuovo nodo diventa la testa
+    if (head == NULL) {
+        return new_item(id_smp, NULL);
+    }
+    
+    // Scorro fino all'ultimo nodo
+    struct item *corrente = head;
+    while (corrente->next != NULL) {
+        corrente = corrente->next;
+    }
+    
+    // Aggiungo il nuovo nodo in coda
+    corrente->next = new_item(id_smp, NULL);
+    
+    return head;
+}
+
+// Conta campioni con durata > min_val
+int count_longer_than(struct analysis A[], int k, int min_val) {
     int contatore = 0;
-    for(int i = 0 ; i < k ; i++ ){
-        if(array[i].duration > min_val){
+    
+    for (int i = 0; i < k; i++) {
+        if (A[i].duration > min_val) {
             contatore++;
         }
     }
+    
     return contatore;
 }
 
-//4) CALCOLA LA DURATA MEDIA DEI CAMPIONI CHE APPARTENGONO ALLA CATEGORIA "T"
-//   RITORNA 0 SE NON CI SONO CAMPIONI DI QUEL TIPO
-double avg_duration_by_type(struct analysis array[] , int k , enum priority t){ 
-    double somma = 0 ;
-    int trovati = 0 ;
-
-    for(int i = 0 ; i < k ; i++){
-        if(array[i].prio == t){
-            somma += array[i].duration;
+// Calcola la media delle durate per una categoria
+double avg_duration_by_type(struct analysis A[], int k, enum priority t) {
+    double somma = 0;
+    int trovati = 0;
+    
+    for (int i = 0; i < k; i++) {
+        if (A[i].prio == t) {
+            somma += A[i].duration;
             trovati++;
         }
     }
-
-    // se non abbiamo trovato campioni di quel tipo ritorniamo 0
-    if(trovati == 0){
-    return 0.0 ; 
+    
+    if (trovati == 0) {
+        return 0.0;
     }
+    
     return somma / trovati;
 }
 
-//5) DEALLOCA L'INTERA LISTA
-void clear_list(struct item *head){
+// Dealloca tutta la lista
+void clear_list(struct item *head) {
     struct item *temp;
+    
     while (head != NULL) {
-        temp = head; //salviamo il nodo attuale in una variabile temporanea
-        head = head -> next; //spostiamo la testa al prossima
-        free(temp); //liberiamo il nodo salvato, cosi libera tutto
-    } 
+        temp = head;
+        head = head->next;
+        free(temp);
+    }
 }
 
-//--main--
+// ========== MAIN ==========
 
-int main(int argc, char *argv[]){
-
-    if(argc != 2){
-        printf("Errore parametri");
-        return 1;
-    }
-
-    int k = atoi(argv[1]);
-
-    if(k < 6 || k > 60){
-        printf("Errore parametri");
+int main(int argc, char *argv[]) {
+    
+    // 1) CONTROLLO PARAMETRI DA LINEA DI COMANDO
+    if (argc != 2) {
+        printf("Errore parametri\n");
         return 1;
     }
     
-    int refDuration , targetPriority;
-
-    do{
-        printf("inserisci refDuration: ");
-        scanf("%d" , &refDuration);
-        if(refDuration < 0 || refDuration > 100){
-           printf("Input errato");
-           return 1;
-        }
-    }while(refDuration < 0 || refDuration > 100);
-
-
-    do{
-        printf("inserisci targetPriority: ");
-        scanf("%d" , &targetPriority);
-        if(targetPriority < 0 || targetPriority > 100){
-           printf("Input errato");
-           return 1;
-        }
-    }while(targetPriority < 0 || targetPriority > 2);
-
-    struct analysis *array = malloc(k * sizeof(struct analysis));
-    if(array == NULL){
-        printf("memoria esaurita \n");
+    int k = atoi(argv[1]);
+    
+    if (k < 6 || k > 60) {
+        printf("Errore parametri\n");
         return 1;
-    } 
-    //acquisizione dati campioni
-    for(int i = 0 ; i < k ; i++) {
+    }
+    
+    // 2) LETTURA PARAMETRI DI CONTROLLO
+    int refDuration, targetPriority;
+    
+    if (scanf("%d", &refDuration) != 1 || refDuration < 0 || refDuration > 100) {
+        printf("Input errato\n");
+        return 1;
+    }
+    
+    if (scanf("%d", &targetPriority) != 1 || targetPriority < 0 || targetPriority > 2) {
+        printf("Input errato\n");
+        return 1;
+    }
+    
+    // 3) ALLOCAZIONE ARRAY
+    struct analysis *array = malloc(k * sizeof(struct analysis));
+    
+    if (array == NULL) {
+        printf("Memoria esaurita\n");
+        return 1;
+    }
+    
+    // 4) LETTURA DATI CAMPIONI
+    for (int i = 0; i < k; i++) {
         int inHours;
-        scanf("%d" , &inHours);
-
-        if(inHours < 0 || inHours > 100 ){
-            printf("input errato \n ");
+        
+        if (scanf("%d", &inHours) != 1 || inHours < 0 || inHours > 100) {
+            printf("Input errato\n");
             free(array);
             return 1;
         }
-
+        
+        // Salvo la durata
         array[i].duration = inHours;
         
-        // classificazione delle priorità
-
-        if(array[i].duration < 5){
-            array[i].prio = LOW; 
-        }
-        else if (array[i].duration <= 20) {
+        // Classifico la priorità
+        if (inHours < 5) {
+            array[i].prio = LOW;
+        } else if (inHours <= 20) {
             array[i].prio = MEDIUM;
-        }
-        else {
+        } else {
             array[i].prio = HIGH;
         }
-
-        // assegnazione zona 
-        switch ( i % 4 ){ 
-            case 0 :
-                strcpy(array[i].lab_zone, "ZONA_A"); //strcpy metti l'array
+        
+        // Assegno la zona in base a i % 4
+        switch (i % 4) {
+            case 0:
+                strcpy(array[i].lab_zone, "ZONA_A");
                 break;
             case 1:
                 strcpy(array[i].lab_zone, "ZONA_B");
@@ -183,23 +177,67 @@ int main(int argc, char *argv[]){
             case 2:
                 strcpy(array[i].lab_zone, "ZONA_C");
                 break;
-            case 3: 
+            case 3:
                 strcpy(array[i].lab_zone, "ZONA_D");
                 break;
         }
-    } 
-// costruzione della lista (filtro)
-    struct item *head = NULL ; //inzializzo 
-    for(int i = 0 ; i < k ; i ++){
-        if(array[i].duration > refDuration){ //se duration e' strettamente maggiore di ref
-            head = append_to_list(head ,i);
+    }
+    
+    // 5) COSTRUZIONE LISTA (FILTRO)
+    struct item *head = NULL;
+    
+    for (int i = 0; i < k; i++) {
+        if (array[i].duration > refDuration) {
+            head = append_to_list(head, i);
         }
     }
-    // MENU OPERATIVO
+    
+    // 6) MENU OPERATIVO
     int cmd;
-    scanf("%d",&cmd);
+    
+    while (1) {
+        if (scanf("%d", &cmd) != 1) {
+            break;  // Esco se l'input fallisce
+        }
+        
+        if (cmd == 0 || cmd == 1) {
+            break;  // Esco se ricevo 0 o 1
+        }
+        
+        switch (cmd) {
+            case 4:
+                printf("OVER_REF:");
+                if (head == NULL) {
+                    printf(" none\n");
+                } else {
+                    struct item *curr = head;
+                    while (curr != NULL) {
+                        printf(" %d", curr->id_smp);
+                        curr = curr->next;
+                    }
+                    printf("\n");
+                }
+                break;
+                
+            case 7:
+                printf("COUNT_LONGER %d\n", count_longer_than(array, k, refDuration));
+                break;
+                
+            case 8:
+                printf("AVG_CAT %d: %.2f\n", targetPriority, 
+                       avg_duration_by_type(array, k, (enum priority)targetPriority));
+                break;
+                
+            default:
+                // Altri comandi: non faccio nulla
+                break;
+        }
+    }
+    
+    // 7) PULIZIA FINALE
+    clear_list(head);
+    free(array);
+    printf("Chiusura\n");
     
     return 0;
 }
-
-
